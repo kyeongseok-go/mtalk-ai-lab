@@ -32,6 +32,11 @@ export default function RootLayout({
           {/* Main Content */}
           <main className="flex-1 min-w-0">{children}</main>
         </div>
+
+        {/* Disclaimer Footer */}
+        <footer className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/90 backdrop-blur text-gray-400 text-[10px] text-center py-1 pointer-events-none">
+          Concept Prototype — Not affiliated with LG CNS
+        </footer>
       </body>
     </html>
   );

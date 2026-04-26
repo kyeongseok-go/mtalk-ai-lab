@@ -2,12 +2,14 @@
 
 import { useParams } from 'next/navigation';
 import { notFound } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Users, MoreHorizontal, Paperclip, Link as LinkIcon } from 'lucide-react';
 import { getChatRoom, chatRooms } from '@/data/messages';
 import { getPerson, getMe } from '@/data/people';
 import { cn } from '@/lib/utils';
 import { SmartCatchup } from '@/components/chat/SmartCatchup';
+import { ReplyDraft } from '@/components/chat/ReplyDraft';
 import {
   MeetingHeaderButton,
   ActiveMeetingBanner,
@@ -53,8 +55,19 @@ export default function ChatPage() {
   const room = getChatRoom(roomId);
   const me = getMe();
   const { startMeeting } = useMeetingStore();
+  const [inputValue, setInputValue] = useState('');
 
   if (!room) notFound();
+
+  // Last message not sent by current user (for reply draft context)
+  const lastReceivedMessage =
+    [...room.messages].reverse().find((m) => m.senderId !== me.id) ?? null;
+
+  // Last 5 messages for conversation context
+  const conversationContext = room.messages.slice(-5);
+
+  // Sender info for reply draft
+  const lastSender = lastReceivedMessage ? getPerson(lastReceivedMessage.senderId) : null;
 
   const categoryColors: Record<string, string> = {
     project: 'bg-red-500',
@@ -267,21 +280,34 @@ export default function ChatPage() {
         })}
       </div>
 
-      {/* Input Bar */}
-      <div className="flex-shrink-0 px-4 py-3 bg-white border-t border-gray-100">
-        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
-          <input
-            type="text"
-            placeholder="메시지를 입력하세요..."
-            className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-            readOnly
-          />
-          <button
-            className="text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--lg-red)' }}
-          >
-            전송
-          </button>
+      {/* Reply Draft — renders only when smartReply toggle is ON */}
+      <div className="flex-shrink-0 bg-white border-t border-gray-100 pt-2">
+        <ReplyDraft
+          lastReceivedMessage={lastReceivedMessage}
+          conversationContext={conversationContext}
+          userName={me.name}
+          senderName={lastSender?.name}
+          senderRole={lastSender?.role}
+          onSelectDraft={(text) => setInputValue(text)}
+        />
+
+        {/* Input Bar */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="메시지를 입력하세요..."
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
+            />
+            <button
+              className="text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--lg-red)' }}
+            >
+              전송
+            </button>
+          </div>
         </div>
       </div>
     </div>
