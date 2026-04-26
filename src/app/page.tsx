@@ -14,6 +14,8 @@ import {
 import { useFeatureStore, FEATURE_CONFIGS } from '@/store/featureStore';
 import { chatRooms, getTotalUnread } from '@/data/messages';
 import { notifications, getUnreadCount } from '@/data/notifications';
+import { PriorityDashboard } from '@/components/chat/PriorityDashboard';
+import { usePriorityStore, getPriorityTier, PRIORITY_INDICATORS } from '@/store/priorityStore';
 
 function formatRelativeTime(ts: string): string {
   const now = new Date('2024-04-24T18:00:00');
@@ -31,10 +33,20 @@ function formatRelativeTime(ts: string): string {
 
 export default function HomePage() {
   const { features, getActiveCount } = useFeatureStore();
+  const { getPriorityScore } = usePriorityStore();
   const activeCount = getActiveCount();
   const totalUnread = getTotalUnread();
   const notifUnread = getUnreadCount();
   const urgentNotifs = notifications.filter(n => n.priority === 'urgent' && !n.isRead);
+
+  // Priority-sorted chat rooms (only when feature is ON)
+  const sortedChatRooms = features.priorityLearning
+    ? [...chatRooms].sort((a, b) => {
+        const scoreA = getPriorityScore(a.id);
+        const scoreB = getPriorityScore(b.id);
+        return scoreB - scoreA;
+      })
+    : chatRooms;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:px-8">
@@ -125,14 +137,27 @@ export default function HomePage() {
         {/* Chat Rooms */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-800">채팅방</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-gray-800">채팅방</h2>
+              {features.priorityLearning && (
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: 'var(--lg-red)' }}
+                >
+                  AI 정렬
+                </span>
+              )}
+            </div>
             <Link href="/chat/project-a" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
               전체 보기
             </Link>
           </div>
           <div className="space-y-2">
-            {chatRooms.map((room) => {
+            {sortedChatRooms.map((room) => {
               const lastMsg = room.messages[room.messages.length - 1];
+              const priorityScore = features.priorityLearning ? getPriorityScore(room.id) : null;
+              const tier = priorityScore !== null ? getPriorityTier(priorityScore) : null;
+              const indicator = tier ? PRIORITY_INDICATORS[tier] : null;
               return (
                 <Link key={room.id} href={`/chat/${room.id}`}>
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-white hover:bg-gray-50 transition-colors border border-gray-100 group">
@@ -156,6 +181,11 @@ export default function HomePage() {
                         <span className="font-medium text-sm text-gray-800 truncate">{room.name}</span>
                         {room.isPinned && (
                           <span className="text-[10px] text-gray-400 flex-shrink-0">📌</span>
+                        )}
+                        {indicator && (
+                          <span className="text-[11px] flex-shrink-0" title={`우선순위 ${indicator.label}`}>
+                            {indicator.dot}
+                          </span>
                         )}
                       </div>
                       <p className="text-xs text-gray-400 truncate mt-0.5">
@@ -184,6 +214,9 @@ export default function HomePage() {
 
         {/* Right Column */}
         <div className="space-y-6">
+          {/* Priority Dashboard — visible only when priorityLearning is ON */}
+          <PriorityDashboard />
+
           {/* Recent Notifications */}
           <section>
             <div className="flex items-center justify-between mb-3">

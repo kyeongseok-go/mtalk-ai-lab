@@ -17,6 +17,9 @@ import {
 } from '@/components/chat/MeetingControls';
 import { PinnedNoteBanner } from '@/components/chat/MeetingNotesModal';
 import { useMeetingStore } from '@/store/meetingStore';
+import { useFeatureStore } from '@/store/featureStore';
+import { usePriorityStore, getPriorityTier, PRIORITY_INDICATORS } from '@/store/priorityStore';
+import { ReadTrackingToast, useReadTrackingToast } from '@/components/chat/PriorityDashboard';
 
 function formatTime(ts: string): string {
   const date = new Date(ts);
@@ -55,9 +58,17 @@ export default function ChatPage() {
   const room = getChatRoom(roomId);
   const me = getMe();
   const { startMeeting } = useMeetingStore();
+  const { features } = useFeatureStore();
+  const { getPriorityScore } = usePriorityStore();
+  const { show: showReadToast, trigger: triggerReadToast } = useReadTrackingToast();
   const [inputValue, setInputValue] = useState('');
 
   if (!room) notFound();
+
+  // Priority-sorted room list for header nav (when toggle ON)
+  const sortedRooms = features.priorityLearning
+    ? [...chatRooms].sort((a, b) => getPriorityScore(b.id) - getPriorityScore(a.id))
+    : chatRooms;
 
   // Last message not sent by current user (for reply draft context)
   const lastReceivedMessage =
@@ -91,29 +102,39 @@ export default function ChatPage() {
 
         {/* Room List - Desktop Left Panel */}
         <div className="hidden md:flex items-center gap-2 mr-2">
-          {chatRooms.map((r) => (
-            <Link key={r.id} href={`/chat/${r.id}`}>
-              <div
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
-                  r.id === roomId
-                    ? 'text-white'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                )}
-                style={r.id === roomId ? { backgroundColor: 'var(--lg-red)' } : {}}
-              >
-                {r.name}
-                {r.unreadCount > 0 && r.id !== roomId && (
-                  <span
-                    className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full text-white text-[10px] font-bold"
-                    style={{ backgroundColor: 'var(--lg-red)' }}
-                  >
-                    {r.unreadCount}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
+          {sortedRooms.map((r) => {
+            const pScore = features.priorityLearning ? getPriorityScore(r.id) : null;
+            const tier = pScore !== null ? getPriorityTier(pScore) : null;
+            const indicator = tier ? PRIORITY_INDICATORS[tier] : null;
+            return (
+              <Link key={r.id} href={`/chat/${r.id}`}>
+                <div
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1',
+                    r.id === roomId
+                      ? 'text-white'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  )}
+                  style={r.id === roomId ? { backgroundColor: 'var(--lg-red)' } : {}}
+                >
+                  {indicator && (
+                    <span className="text-[10px]" title={`우선순위 ${indicator.label}`}>
+                      {indicator.dot}
+                    </span>
+                  )}
+                  {r.name}
+                  {r.unreadCount > 0 && r.id !== roomId && (
+                    <span
+                      className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-0.5 rounded-full text-white text-[10px] font-bold"
+                      style={{ backgroundColor: 'var(--lg-red)' }}
+                    >
+                      {r.unreadCount}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex-1 md:flex-none flex items-center gap-3">
@@ -213,9 +234,11 @@ export default function ChatPage() {
                       'px-3 py-2 rounded-2xl text-sm leading-relaxed break-words',
                       isMe
                         ? 'rounded-tr-md text-white'
-                        : 'rounded-tl-md bg-white text-gray-800 border border-gray-100 shadow-sm'
+                        : 'rounded-tl-md bg-white text-gray-800 border border-gray-100 shadow-sm',
+                      features.priorityLearning && !isMe ? 'cursor-pointer' : ''
                     )}
                     style={isMe ? { backgroundColor: 'var(--lg-red)' } : {}}
+                    onClick={features.priorityLearning && !isMe ? triggerReadToast : undefined}
                   >
                     {/* Mention highlight */}
                     {msg.mentionIds && msg.mentionIds.includes('me') ? (
@@ -279,6 +302,9 @@ export default function ChatPage() {
           );
         })}
       </div>
+
+      {/* Read tracking toast — renders only when priorityLearning is ON */}
+      <ReadTrackingToast show={showReadToast} />
 
       {/* Reply Draft — renders only when smartReply toggle is ON */}
       <div className="flex-shrink-0 bg-white border-t border-gray-100 pt-2">
