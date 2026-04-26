@@ -2,7 +2,7 @@
   "project_slug": "mtalk-ai-lab",
   "project_type": "app",
   "started_at": "2026-04-26",
-  "current_phase": "0",
+  "current_phase": "2",
   "mode": "normal",
   "phases": {
     "0": {
@@ -18,7 +18,10 @@
       "artifact": "CLAUDE.md"
     },
     "1": {
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-26T00:07:20Z",
+      "completed_at": "2026-04-26T00:12:02Z",
+      "artifact": "docs/specs/design-doc-mtalk-ai-lab.md"
     },
     "2": {
       "status": "pending"
@@ -61,7 +64,7 @@
     "resume_bullet": ""
   },
   "artifacts": {
-    "design_doc": null,
+    "design_doc": "docs/specs/design-doc-mtalk-ai-lab.md",
     "spec": null,
     "brainstorm": null,
     "plan": null,
