@@ -6,11 +6,16 @@
   "mode": "normal",
   "phases": {
     "0": {
-      "status": "started",
-      "started_at": "2026-04-26T00:04:50Z"
+      "status": "completed",
+      "started_at": "2026-04-26T00:04:50Z",
+      "completed_at": "2026-04-26T00:05:20Z",
+      "artifact": "~/workspace/mtalk-ai-lab"
     },
     "0.5": {
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-26T00:06:31Z",
+      "completed_at": "2026-04-26T00:06:55Z",
+      "artifact": "CLAUDE.md"
     },
     "1": {
       "status": "pending"
@@ -40,7 +45,15 @@
       "status": "pending"
     }
   },
-  "interview_answers": {},
+  "interview_answers": {
+    "q1_project_nature": "취업 포트폴리오",
+    "q2_target_user": "본인",
+    "q3_avoid_patterns": "과잉 추상화, 템플릿 느낌의 UI",
+    "q4_done_criteria": "기능 3개 배포 + 데모 URL + 4/30 자소서 제출",
+    "q5_visibility": "공개",
+    "q6_tagline": "mTalk AI Lab — LG CNS 사내 메신저에 AI를 입히다",
+    "q7_wiki_related": "없음"
+  },
   "career_signals": {
     "target_companies": [],
     "jd_keywords_matched": [],
@@ -55,8 +68,8 @@
     "review_report": null
   },
   "github": {
-    "remote": null,
+    "remote": "git@github.com:kyeongseok-go/mtalk-ai-lab.git",
     "default_branch": "main",
-    "visibility": "private"
+    "visibility": "public"
   }
 }
