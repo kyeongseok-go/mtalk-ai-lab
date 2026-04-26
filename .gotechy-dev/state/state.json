@@ -2,7 +2,7 @@
   "project_slug": "mtalk-ai-lab",
   "project_type": "app",
   "started_at": "2026-04-26",
-  "current_phase": "2",
+  "current_phase": "5",
   "mode": "normal",
   "phases": {
     "0": {
@@ -24,13 +24,22 @@
       "artifact": "docs/specs/design-doc-mtalk-ai-lab.md"
     },
     "2": {
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-26T00:17:02Z",
+      "completed_at": "2026-04-26T00:17:02Z",
+      "artifact": "docs/specs/01-spec.md"
     },
     "3": {
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-26T00:17:02Z",
+      "completed_at": "2026-04-26T00:17:02Z",
+      "artifact": "docs/superpowers/specs/brainstorm-mtalk-ai-lab.md"
     },
     "4": {
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-04-26T00:17:02Z",
+      "completed_at": "2026-04-26T00:17:02Z",
+      "artifact": "docs/superpowers/plans/2026-04-26-mtalk-ai-lab.md"
     },
     "5": {
       "status": "pending"
@@ -58,16 +67,35 @@
     "q7_wiki_related": "없음"
   },
   "career_signals": {
-    "target_companies": [],
-    "jd_keywords_matched": [],
-    "portfolio_one_liner": "",
-    "resume_bullet": ""
+    "target_companies": [
+      "한화에어로스페이스",
+      "LG CNS",
+      "SK AX",
+      "삼성 SDS",
+      "KT",
+      "GS칼텍��",
+      "한화시스�� ICT",
+      "CJ올리브네트웍스",
+      "HD현대",
+      "포스코"
+    ],
+    "jd_keywords_matched": [
+      "LLM 워크플로우",
+      "프롬프트 엔지니어링",
+      "TypeScript",
+      "React",
+      "Next.js",
+      "Cloudflare Workers",
+      "AI 에이전트"
+    ],
+    "portfolio_one_liner": "사내 메신저 mTalk에 7가지 AI 기능을 설계·구현한 통합 데모 — 토글 비교로 AI 전/후를 즉시 체험",
+    "resume_bullet": "Next.js + Claude API 기반 사내 메신저 AI 기능 7종 프로토타입 설계·개발·배포 (4일, 단독)"
   },
   "artifacts": {
     "design_doc": "docs/specs/design-doc-mtalk-ai-lab.md",
-    "spec": null,
-    "brainstorm": null,
-    "plan": null,
+    "spec": "docs/specs/01-spec.md",
+    "brainstorm": "docs/superpowers/specs/brainstorm-mtalk-ai-lab.md",
+    "plan": "docs/superpowers/plans/2026-04-26-mtalk-ai-lab.md",
     "review_report": null
   },
   "github": {
