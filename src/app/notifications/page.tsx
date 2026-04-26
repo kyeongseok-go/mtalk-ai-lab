@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell, ChevronDown, ChevronRight, Info, X, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { notifications as initialNotifications, type Notification, type NotificationPriority } from '@/data/notifications';
 import { useFeatureStore } from '@/store/featureStore';
+import { useWorkLifeStore } from '@/store/workLifeStore';
 import { cn } from '@/lib/utils';
 import type { ClassifiedNotification } from '@/app/api/classify/route';
 
@@ -266,9 +267,11 @@ function AINotificationCard({ notification: n, onPriorityChange }: AINotificatio
 
 interface SimpleNotificationCardProps {
   notification: Notification;
+  isMuted?: boolean;
+  isUrgentBypass?: boolean;
 }
 
-function SimpleNotificationCard({ notification: n }: SimpleNotificationCardProps) {
+function SimpleNotificationCard({ notification: n, isMuted, isUrgentBypass }: SimpleNotificationCardProps) {
   const typeIconMap: Record<string, string> = {
     alert: '⚠️',
     mention: '💬',
@@ -281,17 +284,31 @@ function SimpleNotificationCard({ notification: n }: SimpleNotificationCardProps
   return (
     <div
       className={cn(
-        'p-4 rounded-xl border border-gray-100 bg-white transition-all',
-        !n.isRead ? 'shadow-sm' : 'opacity-70'
+        'p-4 rounded-xl border transition-all',
+        !n.isRead ? 'shadow-sm' : 'opacity-70',
+        isMuted ? 'opacity-50 bg-gray-50 border-gray-100' : 'bg-white border-gray-100',
+        isUrgentBypass ? 'ring-1 ring-red-300 border-red-200' : ''
       )}
     >
       <div className="flex items-start gap-3">
         <span className="text-base flex-shrink-0 mt-0.5">{typeIconMap[n.type] ?? '🔔'}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className={cn('text-sm font-semibold', n.isRead ? 'text-gray-600' : 'text-gray-900')}>
-              {n.title}
-            </p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className={cn('text-sm font-semibold', n.isRead ? 'text-gray-600' : 'text-gray-900')}>
+                {n.title}
+              </p>
+              {isUrgentBypass && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
+                  🔴 긴급
+                </span>
+              )}
+              {isMuted && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                  🔕 무음
+                </span>
+              )}
+            </div>
             <span className="text-[10px] text-gray-400 flex-shrink-0 mt-0.5">
               {formatTime(n.timestamp)}
             </span>
@@ -307,6 +324,9 @@ function SimpleNotificationCard({ notification: n }: SimpleNotificationCardProps
 
 export default function NotificationsPage() {
   const notificationAIEnabled = useFeatureStore((s) => s.features.notificationAI);
+  const workLifeEnabled = useFeatureStore((s) => s.features.workLifeMode);
+  const workLifeStore = useWorkLifeStore();
+  const isOutside = workLifeEnabled && workLifeStore.isOutsideWorkHours();
 
   // Simple mode state
   const [simpleFilter, setSimpleFilter] = useState<'all' | NotificationPriority>('all');
@@ -472,11 +492,38 @@ export default function NotificationsPage() {
           })}
         </div>
 
+        {/* Work-life off-hours banner in notifications */}
+        {isOutside && workLifeStore.autoMute && (
+          <div
+            className="mb-4 px-4 py-3 rounded-xl flex items-center gap-2"
+            style={{
+              backgroundColor: 'rgba(88, 28, 235, 0.06)',
+              border: '1px solid rgba(88,28,235,0.15)',
+            }}
+          >
+            <span>🌙</span>
+            <span className="text-xs font-semibold text-purple-800">퇴근 시간 외 — 알림 자동 무음 적용 중</span>
+            <span className="text-[10px] text-purple-400 ml-1">긴급 키워드 포함 알림은 정상 표시</span>
+          </div>
+        )}
+
         {/* List */}
         <div className="space-y-2">
-          {simpleFiltered.map((n) => (
-            <SimpleNotificationCard key={n.id} notification={n} />
-          ))}
+          {simpleFiltered.map((n) => {
+            const isUrgentBypass =
+              isOutside && workLifeStore.autoMute
+                ? workLifeStore.isWhitelistedMessage(n.title + ' ' + n.body)
+                : false;
+            const isMuted = isOutside && workLifeStore.autoMute && !isUrgentBypass;
+            return (
+              <SimpleNotificationCard
+                key={n.id}
+                notification={n}
+                isMuted={isMuted}
+                isUrgentBypass={isUrgentBypass}
+              />
+            );
+          })}
         </div>
 
         {simpleFiltered.length === 0 && (

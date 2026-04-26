@@ -4,6 +4,7 @@ import { Settings, Zap } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useFeatureStore, FEATURE_CONFIGS } from '@/store/featureStore';
+import { WorkLifeSettings } from '@/components/settings/WorkLifeSettings';
 
 export default function SettingsPage() {
   const { features, toggleFeature, getActiveCount } = useFeatureStore();
@@ -126,33 +127,57 @@ export default function SettingsPage() {
         <div className="space-y-3">
           {phase2.map((cfg) => {
             const isOn = features[cfg.key as keyof typeof features];
+            const isWorkLife = cfg.key === 'workLifeMode';
 
             return (
-              <div
-                key={cfg.key}
-                className="flex items-start gap-4 p-4 rounded-xl bg-white border border-gray-100 opacity-80"
-              >
-                <div className="text-2xl flex-shrink-0 mt-0.5 opacity-60">{cfg.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="font-semibold text-sm text-gray-700">{cfg.nameKo}</span>
-                    <span className="text-[10px] text-gray-400">{cfg.nameEn}</span>
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-100">
-                      Phase 2 준비 중
-                    </span>
+              <div key={cfg.key}>
+                <div
+                  className={`flex items-start gap-4 p-4 rounded-xl bg-white border transition-all duration-200 ${isWorkLife ? '' : 'opacity-80 border-gray-100'}`}
+                  style={
+                    isWorkLife && isOn
+                      ? { borderColor: 'rgba(124, 58, 237, 0.3)', boxShadow: '0 0 0 1px rgba(124,58,237,0.1)' }
+                      : isWorkLife
+                      ? { borderColor: 'rgba(124, 58, 237, 0.15)' }
+                      : {}
+                  }
+                >
+                  <div className={`text-2xl flex-shrink-0 mt-0.5 ${isWorkLife ? '' : 'opacity-60'}`}>{cfg.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className={`font-semibold text-sm ${isWorkLife ? 'text-gray-900' : 'text-gray-700'}`}>{cfg.nameKo}</span>
+                      <span className="text-[10px] text-gray-400">{cfg.nameEn}</span>
+                      {!isWorkLife && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-100">
+                          Phase 2 준비 중
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs leading-relaxed ${isWorkLife ? 'text-gray-500' : 'text-gray-400'}`}>{cfg.description}</p>
+                    {isWorkLife && isOn && (
+                      <div
+                        className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                        style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed' }}
+                      >
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                        활성화됨
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">{cfg.description}</p>
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Switch
+                      checked={isOn}
+                      onCheckedChange={() =>
+                        toggleFeature(cfg.key as keyof typeof features)
+                      }
+                      disabled={!isWorkLife}
+                      className={!isWorkLife ? 'opacity-50 cursor-not-allowed' : ''}
+                      style={isWorkLife && isOn ? { backgroundColor: '#7c3aed' } : {}}
+                    />
+                  </div>
                 </div>
-                <div className="flex-shrink-0 mt-0.5">
-                  <Switch
-                    checked={isOn}
-                    onCheckedChange={() =>
-                      toggleFeature(cfg.key as keyof typeof features)
-                    }
-                    disabled
-                    className="opacity-50 cursor-not-allowed"
-                  />
-                </div>
+
+                {/* WorkLife expanded settings panel */}
+                {isWorkLife && isOn && <WorkLifeSettings />}
               </div>
             );
           })}

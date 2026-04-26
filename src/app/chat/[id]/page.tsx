@@ -20,6 +20,7 @@ import { useMeetingStore } from '@/store/meetingStore';
 import { useFeatureStore } from '@/store/featureStore';
 import { usePriorityStore, getPriorityTier, PRIORITY_INDICATORS } from '@/store/priorityStore';
 import { ReadTrackingToast, useReadTrackingToast } from '@/components/chat/PriorityDashboard';
+import { useWorkLifeStore } from '@/store/workLifeStore';
 
 function formatTime(ts: string): string {
   const date = new Date(ts);
@@ -62,6 +63,17 @@ export default function ChatPage() {
   const { getPriorityScore } = usePriorityStore();
   const { show: showReadToast, trigger: triggerReadToast } = useReadTrackingToast();
   const [inputValue, setInputValue] = useState('');
+  const [sendWarningDismissed, setSendWarningDismissed] = useState(false);
+
+  // Work-life mode
+  const workLifeStore = useWorkLifeStore();
+  const workLifeOn = features.workLifeMode;
+  const isOutside = workLifeOn && workLifeStore.isOutsideWorkHours();
+  const showSendWarning =
+    isOutside &&
+    workLifeStore.showSenderWarning &&
+    inputValue.length > 0 &&
+    !sendWarningDismissed;
 
   if (!room) notFound();
 
@@ -179,6 +191,33 @@ export default function ChatPage() {
       {/* Pinned meeting notes — renders only when a note is pinned */}
       <PinnedNoteBanner roomId={roomId} />
 
+      {/* Work-Life off-hours banner */}
+      {isOutside && workLifeStore.autoMute && (
+        <div
+          className="flex-shrink-0 px-4 py-2.5 flex flex-col gap-1"
+          style={{
+            backgroundColor: 'rgba(88, 28, 235, 0.06)',
+            borderBottom: '1px solid rgba(88,28,235,0.12)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🌙</span>
+            <span className="text-xs font-semibold text-purple-800">
+              {workLifeStore.simulatedTime ?? new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })} — 근무 시간 외
+            </span>
+            <span className="text-[10px] text-purple-500 ml-1">받은 메시지가 자동 무음 처리됨</span>
+          </div>
+          {workLifeStore.autoReply && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-purple-400">자동 응답 발송:</span>
+              <span className="text-[10px] text-purple-600 italic">
+                &apos;{workLifeStore.autoReplyMessage}&apos;
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         {room.messages.map((msg, idx) => {
@@ -190,6 +229,14 @@ export default function ChatPage() {
             prev &&
             prev.senderId === msg.senderId &&
             !shouldShowDateDivider(msg.timestamp, prev.timestamp);
+
+          // Work-life: determine if this received message is whitelisted (urgent bypass)
+          const isWhitelisted =
+            isOutside && !isMe && sender
+              ? workLifeStore.isWhitelistedMessage(msg.content, sender.name)
+              : false;
+          // Muted = off hours + autoMute + not whitelisted + not from me
+          const isMuted = isOutside && workLifeStore.autoMute && !isMe && !isWhitelisted;
 
           return (
             <div key={msg.id}>
@@ -207,7 +254,8 @@ export default function ChatPage() {
                 className={cn(
                   'flex gap-2.5',
                   isMe ? 'flex-row-reverse' : 'flex-row',
-                  isSameSenderAsPrev ? 'mt-0.5' : 'mt-3'
+                  isSameSenderAsPrev ? 'mt-0.5' : 'mt-3',
+                  isMuted ? 'opacity-50' : ''
                 )}
               >
                 {/* Avatar */}
@@ -220,11 +268,21 @@ export default function ChatPage() {
                 )}
 
                 <div className={cn('flex flex-col', isMe ? 'items-end' : 'items-start', 'max-w-[70%]')}>
-                  {/* Sender name */}
+                  {/* Sender name + urgent/muted badge */}
                   {!isMe && !isSameSenderAsPrev && sender && (
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span className="text-xs font-semibold text-gray-700">{sender.name}</span>
                       <span className="text-[10px] text-gray-400">{sender.role}</span>
+                      {isWhitelisted && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
+                          🔴 긴급
+                        </span>
+                      )}
+                      {isMuted && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                          🔕 무음
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -235,7 +293,8 @@ export default function ChatPage() {
                       isMe
                         ? 'rounded-tr-md text-white'
                         : 'rounded-tl-md bg-white text-gray-800 border border-gray-100 shadow-sm',
-                      features.priorityLearning && !isMe ? 'cursor-pointer' : ''
+                      features.priorityLearning && !isMe ? 'cursor-pointer' : '',
+                      isWhitelisted ? 'ring-1 ring-red-300' : ''
                     )}
                     style={isMe ? { backgroundColor: 'var(--lg-red)' } : {}}
                     onClick={features.priorityLearning && !isMe ? triggerReadToast : undefined}
@@ -317,13 +376,53 @@ export default function ChatPage() {
           onSelectDraft={(text) => setInputValue(text)}
         />
 
+        {/* Work-life send warning */}
+        {showSendWarning && (
+          <div className="mx-4 mb-2 px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50">
+            <p className="text-xs font-semibold text-amber-800 mb-2">
+              ⚠️ 받는 사람이 현재 근무 시간 외입니다. 정말 보내시겠습니까?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setInputValue('');
+                  setSendWarningDismissed(false);
+                }}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => setSendWarningDismissed(true)}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#fa5f69' }}
+              >
+                그래도 보내기
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Input Bar */}
         <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
+          <div
+            className="flex items-center gap-2 rounded-xl px-3 py-2 border"
+            style={
+              isOutside && workLifeStore.showSenderWarning
+                ? {
+                    backgroundColor: 'rgba(245, 243, 255, 0.8)',
+                    borderColor: 'rgba(124, 58, 237, 0.25)',
+                  }
+                : { backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }
+            }
+          >
             <input
               type="text"
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setSendWarningDismissed(false);
+              }}
               placeholder="메시지를 입력하세요..."
               className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
             />
