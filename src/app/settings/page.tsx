@@ -118,9 +118,9 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-gray-800">Phase 2</h2>
           <Badge
             variant="secondary"
-            className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500"
+            className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 border-blue-200"
           >
-            준비 중
+            출시됨
           </Badge>
         </div>
 
@@ -132,31 +132,23 @@ export default function SettingsPage() {
             return (
               <div key={cfg.key}>
                 <div
-                  className={`flex items-start gap-4 p-4 rounded-xl bg-white border transition-all duration-200 ${isWorkLife ? '' : 'opacity-80 border-gray-100'}`}
-                  style={
-                    isWorkLife && isOn
-                      ? { borderColor: 'rgba(124, 58, 237, 0.3)', boxShadow: '0 0 0 1px rgba(124,58,237,0.1)' }
-                      : isWorkLife
-                      ? { borderColor: 'rgba(124, 58, 237, 0.15)' }
-                      : {}
-                  }
+                  className="flex items-start gap-4 p-4 rounded-xl bg-white border transition-all duration-200"
+                  style={{
+                    borderColor: isOn ? 'rgba(200, 16, 46, 0.2)' : '#e5e7eb',
+                    boxShadow: isOn ? '0 0 0 1px rgba(200, 16, 46, 0.1)' : 'none',
+                  }}
                 >
-                  <div className={`text-2xl flex-shrink-0 mt-0.5 ${isWorkLife ? '' : 'opacity-60'}`}>{cfg.icon}</div>
+                  <div className="text-2xl flex-shrink-0 mt-0.5">{cfg.icon}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`font-semibold text-sm ${isWorkLife ? 'text-gray-900' : 'text-gray-700'}`}>{cfg.nameKo}</span>
+                      <span className="font-semibold text-sm text-gray-900">{cfg.nameKo}</span>
                       <span className="text-[10px] text-gray-400">{cfg.nameEn}</span>
-                      {!isWorkLife && (
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-100">
-                          Phase 2 준비 중
-                        </span>
-                      )}
                     </div>
-                    <p className={`text-xs leading-relaxed ${isWorkLife ? 'text-gray-500' : 'text-gray-400'}`}>{cfg.description}</p>
-                    {isWorkLife && isOn && (
+                    <p className="text-xs text-gray-500 leading-relaxed">{cfg.description}</p>
+                    {isOn && (
                       <div
                         className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed' }}
+                        style={{ backgroundColor: 'rgba(250, 95, 105, 0.08)', color: 'var(--lg-red)' }}
                       >
                         <span className="w-1 h-1 rounded-full bg-current" />
                         활성화됨
@@ -169,9 +161,7 @@ export default function SettingsPage() {
                       onCheckedChange={() =>
                         toggleFeature(cfg.key as keyof typeof features)
                       }
-                      disabled={!isWorkLife}
-                      className={!isWorkLife ? 'opacity-50 cursor-not-allowed' : ''}
-                      style={isWorkLife && isOn ? { backgroundColor: '#7c3aed' } : {}}
+                      style={isOn ? { backgroundColor: 'var(--lg-red)' } : {}}
                     />
                   </div>
                 </div>
@@ -188,7 +178,7 @@ export default function SettingsPage() {
       <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
         <p className="text-xs text-gray-500 leading-relaxed">
           <span className="font-medium text-gray-700">mTalk AI Lab</span>은 LG CNS mTalk 사내 메신저에
-          AI 기능을 통합하는 데모 프로젝트입니다. Phase 1 기능은 실제 AI 연동 없이 UI 시연 목적으로 제공됩니다.
+          AI 기능을 통합하는 데모 프로젝트입니다. 7개 기능 모두 Claude API로 동작합니다.
           설정은 브라우저에 저장됩니다.
         </p>
       </div>
