@@ -1,0 +1,62 @@
+{
+  "project_slug": "mtalk-ai-lab",
+  "project_type": "app",
+  "started_at": "2026-04-26",
+  "current_phase": "0",
+  "mode": "normal",
+  "phases": {
+    "0": {
+      "status": "started",
+      "started_at": "2026-04-26T00:04:50Z"
+    },
+    "0.5": {
+      "status": "pending"
+    },
+    "1": {
+      "status": "pending"
+    },
+    "2": {
+      "status": "pending"
+    },
+    "3": {
+      "status": "pending"
+    },
+    "4": {
+      "status": "pending"
+    },
+    "5": {
+      "status": "pending"
+    },
+    "6": {
+      "status": "pending"
+    },
+    "7": {
+      "status": "pending"
+    },
+    "8": {
+      "status": "pending"
+    },
+    "10": {
+      "status": "pending"
+    }
+  },
+  "interview_answers": {},
+  "career_signals": {
+    "target_companies": [],
+    "jd_keywords_matched": [],
+    "portfolio_one_liner": "",
+    "resume_bullet": ""
+  },
+  "artifacts": {
+    "design_doc": null,
+    "spec": null,
+    "brainstorm": null,
+    "plan": null,
+    "review_report": null
+  },
+  "github": {
+    "remote": null,
+    "default_branch": "main",
+    "visibility": "private"
+  }
+}
