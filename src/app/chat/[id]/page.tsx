@@ -8,6 +8,13 @@ import { getChatRoom, chatRooms } from '@/data/messages';
 import { getPerson, getMe } from '@/data/people';
 import { cn } from '@/lib/utils';
 import { SmartCatchup } from '@/components/chat/SmartCatchup';
+import {
+  MeetingHeaderButton,
+  ActiveMeetingBanner,
+  SimulationButton,
+} from '@/components/chat/MeetingControls';
+import { PinnedNoteBanner } from '@/components/chat/MeetingNotesModal';
+import { useMeetingStore } from '@/store/meetingStore';
 
 function formatTime(ts: string): string {
   const date = new Date(ts);
@@ -45,6 +52,7 @@ export default function ChatPage() {
   const roomId = params.id as string;
   const room = getChatRoom(roomId);
   const me = getMe();
+  const { startMeeting } = useMeetingStore();
 
   if (!room) notFound();
 
@@ -53,6 +61,11 @@ export default function ChatPage() {
     team: 'bg-blue-500',
     executive: 'bg-slate-700',
     casual: 'bg-gray-500',
+  };
+
+  const handleSimulate = () => {
+    // Start meeting from message index 0 for simulation
+    startMeeting(roomId, 0);
   };
 
   return (
@@ -90,7 +103,7 @@ export default function ChatPage() {
           ))}
         </div>
 
-        <div className="flex-1 md:flex-none md:ml-auto flex items-center gap-3">
+        <div className="flex-1 md:flex-none flex items-center gap-3">
           <div className={`w-8 h-8 rounded-lg ${categoryColors[room.category]} flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
             {room.name.slice(0, 1)}
           </div>
@@ -105,13 +118,32 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <button className="ml-auto text-gray-400 hover:text-gray-600 p-1">
-          <MoreHorizontal size={18} />
-        </button>
+        {/* Meeting controls — visible only when toggle is ON */}
+        <div className="flex items-center gap-2 ml-auto">
+          <SimulationButton
+            roomId={roomId}
+            messageCount={room.messages.length}
+            onSimulate={handleSimulate}
+          />
+          <MeetingHeaderButton
+            roomId={roomId}
+            messages={room.messages}
+            memberIds={room.memberIds}
+          />
+          <button className="text-gray-400 hover:text-gray-600 p-1">
+            <MoreHorizontal size={18} />
+          </button>
+        </div>
       </header>
+
+      {/* Active meeting banner — shows when meeting is in progress */}
+      <ActiveMeetingBanner roomId={roomId} />
 
       {/* Smart Catchup — renders only when feature toggle is ON */}
       <SmartCatchup roomId={roomId} messages={room.messages} />
+
+      {/* Pinned meeting notes — renders only when a note is pinned */}
+      <PinnedNoteBanner roomId={roomId} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
